@@ -1,0 +1,41 @@
+Package: zooaRchGUI
+Type: Package
+Title: Analytical Tools for Zooarchaeological Data
+Version: 1.0.1
+Date: 2017-05-11
+Author: Erik Otarola-Castillo, Jesse Wolfhagen, John Brian Rapes, and Max D. Price
+Maintainer: Erik Otarola-Castillo <eoc@purdue.edu>
+Description: The analysis and inference of faunal remains recovered from
+    archaeological sites concerns the field of zooarchaeology. The zooaRch package
+    provides analytical tools to make inferences on zooarchaeological data.
+    Functions in this package allow users to read, manipulate, visualize, and
+    analyze zooarchaeological data.
+Imports:
+    car,   
+    coda,
+    foreign,
+    geomorph,
+    ggplot2,
+    graphics,
+    grDevices,
+    MASS,      
+    pgirmess,
+    raster,
+    readxl,
+    rjags,    
+    sp, 
+    spdep,
+    splancs,
+    stats,   
+    tcltk,
+    tcltk2,
+    tkrplot,
+    utils,
+    vegan,    
+    xlsx
+License: GPL (>= 2)
+LazyData: true
+Suggests:
+    rmarkdown,
+    knitr
+RoxygenNote: 5.0.1
