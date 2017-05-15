@@ -3559,9 +3559,6 @@ simp_lmfun<-function(){
 
 # glmfun to be used for simple two-variable regression and two-way anova with interaction effects
 glmfun<-function(){
-  
-  
-  
   #Data Model: environment called "e"
   e <- new.env()
   e$dataname <- tclVar("Choose one"); 
@@ -4772,9 +4769,6 @@ multi_boxplotfun<-function(){
 
 # parMANOVA Function
 parMANOVA_fun<-function(){ #EOC + JBR
-  
-  
-  
   #Data Model: enviroment called "e"
   e<-new.env()
   e$dataname <- tclVar("Choose Dataframe");
@@ -4785,7 +4779,6 @@ parMANOVA_fun<-function(){ #EOC + JBR
   
   #Ok Function
   Okfun<-function(){
-    
     #Using Selected Values
     Value_Y <- input1[as.numeric(tkcurselection(list1)) + 1]
     Value_X <- input1[as.numeric(tkcurselection(list2)) + 1]
@@ -4881,7 +4874,7 @@ parMANOVA_fun<-function(){ #EOC + JBR
   list2<-tk2listbox(label_frame, height = 4, selectmode = "extended")
   put_label(label_frame, "Predictor Matrix:", row = 4, column = 1, sticky = "n")
   tkgrid(list2, padx = 10, pady = c(5, 10), row = 5, column = 1)
-  input2<-colnames(e$dataframe)
+  input2<-sort(colnames(e$dataframe))
   for(inputs in input2){
     tkinsert(list2, "end", inputs)
   }
@@ -4942,10 +4935,6 @@ parMANOVA_fun<-function(){ #EOC + JBR
 
 # NPMANOVA Function 
 NPMANOVA_fun<-function(){ #EOC + JBR
-  
-  
-  
-  
   #Data Model: enviroment called "e"
   e<-new.env()
   e$dataname <- tclVar("Choose Dataframe");
@@ -5057,7 +5046,7 @@ NPMANOVA_fun<-function(){ #EOC + JBR
   list2<-tk2listbox(label_frame, height = 4, selectmode = "extended")
   put_label(label_frame, "Predictor Matrix:", row = 4, column = 1, sticky = "n")
   tkgrid(list2, padx = 10, pady = c(5, 10), row = 5, column = 1)
-  input2<-colnames(e$dataframe)
+  input2<-sort(colnames(e$dataframe))
   for(inputs in input2){
     tkinsert(list2, "end", inputs)
   }
@@ -5233,7 +5222,7 @@ NPHotellingt_fun<-function(){ #EOC + JBR
   list2<-tk2listbox(label_frame, height = 4, selectmode = "extended")
   put_label(label_frame, "Predictor Matrix:", row = 4, column = 1, sticky = "n")
   tkgrid(list2, padx = 10, pady = c(5, 10), row = 5, column = 1)
-  input2<-colnames(e$dataframe)
+  input2<-sort(colnames(e$dataframe))
   for(inputs in input2){
     tkinsert(list2, "end", inputs)
   }
@@ -6554,7 +6543,6 @@ mantel3_fun<-function(){
 
 # Ripleys K Function
 ripleys_K_fun<-function() {
-  # dfs.fun<-function()c(unlist(lapply(ls(envir = .GlobalEnv), function(dfs) if (class(get(dfs))[1] == "data.frame") c(unlist(dfs)))),"Load User File", "Load Shape File")
   sppdfs.fun<-function()c(unlist(lapply(c(ls(envir = .GlobalEnv),ls("package:zooaRchGUI")), function(SpatialPointsDataFrame) if(class(get(SpatialPointsDataFrame))[1] == "SpatialPointsDataFrame")c(unlist(SpatialPointsDataFrame)))), "Load User File", "Load Shape File")
   list.fun<-function()c(unlist(lapply(c(ls(envir = .GlobalEnv),ls("package:zooaRchGUI")), function(list) if (class(get(list))[1] == "list") c(unlist(list)))), "Load User File", "Load Shape File")
   
