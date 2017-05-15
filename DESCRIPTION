@@ -2,7 +2,7 @@ Package: zooaRchGUI
 Type: Package
 Title: Analytical Tools for Zooarchaeological Data
 Version: 1.0.1
-Date: 2017-05-11
+Date: 2017-05-15
 Author: Erik Otarola-Castillo, Jesse Wolfhagen, John Brian Rapes, and Max D. Price
 Maintainer: Erik Otarola-Castillo <eoc@purdue.edu>
 Description: The analysis and inference of faunal remains recovered from
@@ -38,4 +38,6 @@ LazyData: true
 Suggests:
     rmarkdown,
     knitr
+URL: https://github.com/zooaRchGUI/zooaRchGUI/blob/master/zooaRchGUI_user_manual.zip
+BugReports: https://github.com/zooaRchGUI/zooaRchGUI/issues
 RoxygenNote: 5.0.1
