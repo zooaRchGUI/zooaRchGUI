@@ -1,17 +1,19 @@
-
 ---
-title: "zooaRchGUI User Manual"
-author: "Erik Ot&#225;rola-Castillo"
-date: '`r Sys.Date()`'
-output:
-  html_document:
-    toc: yes
-    toc_float: true
-    toc_depth: '6'
+output: github_document
 ---
- 
 
-![](figs/zooarchLOGO.png){#id .class width=6.5in height=1.69in}
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+```{r, echo = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "README-"
+)
+options(tibble.print_min = 5, tibble.print_max = 5)
+```
+
+![](figs/zooarchLOGO.png)
 
 Zooarchaeology is concerned with the analysis and inference of faunal remains recovered from archaeological sites. The **zooaRchGUI package** provides a *Graphical User Interface (GUI)* to analytical tools for zooarchaeological data in the R package. Functions in this package allow users to:
 
