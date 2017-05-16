@@ -18,12 +18,16 @@ Useful data are available with the package. After installing and starting zooaRc
 1.	Install R by downloading the latest version from the Cromprehensive R Archive Network (CRAN) https://www.r-project.org/. 
 2.	To make coding easier, you might also want to download RStudio from https://www.rstudio.com/products/RStudio/#Desktop.
 
+#### Install necessary external software
+Before installing zooaRchGUI, **make sure** the following are installed in your Macintosh/Windows/Linux machines:
+
+1.  Apple Macintosh machines **NEED** to have XQuartz installed, download from	https://www.xquartz.org/
+
+2.  Download and install "JAGS 4.2", **it is necessary** for installation and Bayesian computations, for your particular operating system from the download section in http://mcmc-jags.sourceforge.net/
+
 #### Install the *zooaRchGUI* package
-1.	Prior to installing the zooaRchGUI package, please make sure you have the following programs installed in your Apple/Windows/Linux machines:
-    a.	Apple Macintosh machines NEED to have XQuartz installed, download from	https://www.xquartz.org/ 
-    b.  Please download and install "JAGS", necessary for Bayesian computations, for your particular operating system from the download section in http://mcmc-jags.sourceforge.net/
-2.	Now that you have these installed, start up R or RStudio.
-3.  There are several ways to install the latest version of zooaRchGUI:
+1.	Now that you have these installed, start up R or RStudio.
+2.  There are several ways to install the latest version of zooaRchGUI:
     
     a. Directly from CRAN: 
     ```{r, eval=FALSE,echo=TRUE} 
@@ -35,16 +39,16 @@ Useful data are available with the package. After installing and starting zooaRc
     library(devtools)
     install_github("zooarchGUI/zooaRchGUI", dependencies=TRUE)
     ``` 
-4.	You can install the following necessary packages by copying and pasting the following R code into the RStudio console
+3.	You can install the following necessary packages by copying and pasting the following R code into the RStudio console
     ```{r, eval=FALSE,echo=TRUE}
     install.packages(c("ggplot2","tcltk2", "tkrplot", "car", "readxl","foreign",
                    "maptools","spdep","raster", "tripack", "pgirmess", "geomorph", 
                    "vegan", "splancs", "rjags", dependencies = TRUE))
     ```
-5.	You can also install these packages interactively by typing the names of the packages into RStudio. Get this R-studio dropdown through tools->Install Packages. Make sure "installed dependencies" is checked
+4.	You can also install these packages interactively by typing the names of the packages into RStudio. Get this R-studio dropdown through tools->Install Packages. Make sure "installed dependencies" is checked
 ![](figs/8_Install%20packages%20from%20RStudio.png)
 
-6.	Once the package is installed [DONE (zooaRchGUI)], you can load zooaRchGUI by sending the following commands to the R-studio console:
+5.	Once the package is installed [DONE (zooaRchGUI)], you can load zooaRchGUI by sending the following commands to the R-studio console:
 ```{r, eval=F,echo=T}
 
 library(zooaRchGUI)
