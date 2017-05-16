@@ -323,7 +323,7 @@ That's it! You can browse through the package, import your own data, or use the 
 ### **6. Sampling Menu**
 #### 6.1 Single Sample Rarefaction
 
-![](figs/sampling%20menu_single sample.png)
+![](figs/sampling%20menu_single%20sample.png)
 <br>
 
   This function will perform a rarefaction analysis of a single sample. It will accept dataframes either already in R memory or loaded by the user. The variable that the analysis will be done on is chosen along with the margins in which the index is computed and the conf.levels. The results can be plotted if the "plot" checkbox is marked. The results of the analysis are saved in R memory as "Results".
@@ -331,7 +331,7 @@ That's it! You can browse through the package, import your own data, or use the 
   
 #### 6.2 Multiple Sample Rarefaction*
 
-![](figs/sampling%20menu_multiple sample.png)
+![](figs/sampling%20menu_multiple%20sample.png)
 <br>
 
   This function will perform a rarefaction analysis for multiple samples. It will accept dataframes either already in R memory or loaded by the user. The variable that the analysis will be done on is chosen along with the margins in which the index is computed and the conf.levels. The results can be plotted if the "plot" checkbox is marked. The results of the analysis are saved in R memory as "Results".
@@ -363,7 +363,7 @@ That's it! You can browse through the package, import your own data, or use the 
 
 ##### Shapiro-Wilk's Test
 
-![](figs/univariate%20menu_normality_shapiro wilk.png)
+![](figs/univariate%20menu_normality_shapiro%20wilk.png)
 <br>
 
   This function will perform a Shapiro-Wilk's test on the selected dataset. It will accept dataframes either already in R memory or loaded by the user. The variable from the dataset that the test will be performed on is chosen in the "Variable" combobox. The results will be plotted if the "qqplot" checkbox is marked. The results will be saved in R memory as "Results".
