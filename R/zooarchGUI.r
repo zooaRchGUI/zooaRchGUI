@@ -222,7 +222,7 @@ zooaRch_GUI<-function() {
   label <- ttklabel (tt, image = "image1",text = "Statistics for Zooarchaeologists" , compound = "top" ,padding = c(3, 3, 12, 12))
   tkpack(label)
   tkpack(txt)#adjust window size
-  tktitle(tt) <- "zooaRch GUI 1.0"
+  tktitle(tt) <- "zooaRch GUI 1.0.1"
   
   #File Menu
   topMenu <- tkmenu(tt)
@@ -825,7 +825,6 @@ getcsvfile <- function() {
 # death_age_fun
 death_age_fun<-function(){
   conf.level<-Fusion.groups<-UpperCI<-LowerCI<-Count<-NULL
-  
   #Data Model: environment called "e"
   e <- new.env()
   e$data <- tclVar("Choose one"); 
@@ -1250,8 +1249,6 @@ death_age_fun<-function(){
 
 # srarefun
 s_rarefun<-function(){
-  
-  
   rarefac.fun <- function(data=e$dataframe, m=e$mval, ci = e$conf.level){
     k <- data[data > 0] #species frequencies
     n <- sum(k) #total site size
@@ -1349,6 +1346,10 @@ s_rarefun<-function(){
   OKfun<-function(){
     e$variablename<-tclvalue(e$variablename)
     variablevalue <- get(e$variablename,e$dataframe,inherits=TRUE)
+    if(is.numeric(variablevalue) == FALSE){
+      tkdestroy(window)
+      stop("Variable must be numeric",call. = FALSE)
+    }
     assign("variablevalue", variablevalue, envir = e)
     e$mval<-as.numeric(tclvalue(e$mval))
     e$conf.level<-as.numeric(tclvalue(e$conf.level))*.01
@@ -1418,6 +1419,26 @@ s_rarefun<-function(){
   tkgrid(data_labels1, row = 1, column = 1, sticky="ew", padx = 2)
   tkfocus(data_labels1) 
   
+  set_val <- function(){
+    dataname <- tclvalue(e$dataname)
+    if (dataname == "Load User File"){
+      dataframe <- getcsvfile()
+      assign("dataframe", dataframe, envir = e)
+    }
+    if(dataname != "Load User File"){
+      dataframe <- get(dataname, .GlobalEnv)
+      assign("dataframe", dataframe, envir = e)
+    }
+    tkconfigure(data_labels1, values = sort(colnames(e$dataframe)))
+  }
+  tkconfigure(data_combo, postcommand = function(){
+    e$variablename<-tclVar("Choose Variable")
+    e$variablevalue<-tclVar("Choose Variable")
+    tkconfigure(data_labels1, textvariable = e$variablename)
+  })
+  tkconfigure(data_labels1, postcommand = set_val)
+  tkbind(data_labels1, "<Return>", function(W) tcl(W, "invoke"))
+  
   #M Value Slider
   put_label(label_frame, "m value:", 2, 0)
   m_value_frame <- ttkframe(label_frame)
@@ -1477,8 +1498,6 @@ s_rarefun<-function(){
 
 # ksfun
 ksfun<-function(){
-  
-  
   #Data Model: environment called "e"
   e <- new.env()
   e$dataname <- tclVar("Choose one"); 
@@ -1500,7 +1519,7 @@ ksfun<-function(){
     print(out)
     
     #Plotting
-    if(tclvalue(e$ecdf)>0){
+    if(as.numeric(tclvalue(e$ecdf))>0){
       x<-e$variablevalue
       ref<-rnorm(10000,mean(x),sd(x))
       plot(ecdf(x),xlim=range(c(x,ref)),main=paste("ecdf of ",e$variablename))
@@ -1554,6 +1573,26 @@ ksfun<-function(){
   tkgrid(data_labels1, row = 1, column = 1, sticky="ew", padx = 2)
   tkfocus(data_labels1) 
   
+  set_val <- function(){
+    dataname <- tclvalue(e$dataname)
+    if (dataname == "Load User File"){
+      dataframe <- getcsvfile()
+      assign("dataframe", dataframe, envir = e)
+    }
+    if(dataname != "Load User File"){
+      dataframe <- get(dataname, .GlobalEnv)
+      assign("dataframe", dataframe, envir = e)
+    }
+    tkconfigure(data_labels1, values = sort(colnames(e$dataframe)))
+  }
+  tkconfigure(data_combo, postcommand = function(){
+    e$variablename<-tclVar("Choose Variable")
+    e$variablevalue<-tclVar("Choose Variable")
+    tkconfigure(data_labels1, textvariable = e$variablename)
+  })
+  tkconfigure(data_labels1, postcommand = set_val)
+  tkbind(data_labels1, "<Return>", function(W) tcl(W, "invoke"))
+  
   #ecdfplot Checkbox
   put_label ( label_frame , "ecdf plot:" , 2 , 0)
   ecdfplot_check <-ttkcheckbutton (label_frame , variable = e$ecdf)
@@ -1579,11 +1618,10 @@ ksfun<-function(){
 
 # tfun
 tfun<-function(){
-  
-  
   #Data Model: environment called "e"
   e <- new.env()
-  e$data <- tclVar("Choose one"); 
+  e$dataname <- tclVar("Choose one"); 
+  e$data <- tclVar("NULL");
   e$variable1 <- tclVar("Choose one");
   e$variable2 <- tclVar("Choose one");
   e$alternative <- tclVar("two.sided"); 
@@ -1639,25 +1677,25 @@ tfun<-function(){
   put_label(label_frame, "Data:",0,0)
   data_combo <- ttkcombobox(label_frame, state = "readonly", 
                             values = dfs.fun(), 
-                            textvariable = e$data)
+                            textvariable = e$dataname)
   tkgrid(data_combo, row = 0, column = 1, sticky="ew", padx = 2)
-  tkfocus(data_combo)                      # give focus
+  tkfocus(data_combo) # give focus
   
-  tkwait.variable(e$data)
-  
-  data <- tclvalue(e$data)
-  if (data == "Load User File"){
+  tkwait.variable(e$dataname)
+  dataname <- tclvalue(e$dataname)
+  if (dataname == "Load User File"){
     data <- getcsvfile()
     assign("data", data, envir = e)
   }
-  if(data != "Load User File"){
-    data <- get(data, .GlobalEnv)
+  if(dataname != "Load User File"){
+    data <- get(dataname, .GlobalEnv)
     assign("data", data, envir = e)
   }
+  
   #Variable 1 Combobox
   put_label(label_frame, "Variable 1:",1,0)
   data_labels1 <- ttkcombobox(label_frame, state = "readonly", 
-                              values = colnames(e$data), 
+                              values = sort(colnames(e$data)), 
                               textvariable = e$variable1)
   tkgrid(data_labels1, row = 1, column = 1, sticky="ew", padx = 2)
   tkfocus(data_labels1) 
@@ -1665,10 +1703,33 @@ tfun<-function(){
   #Variable 2 Combobox
   put_label(label_frame, "Variable 2:",2,0)
   data_labels2 <- ttkcombobox(label_frame, state = "readonly", 
-                              values = colnames(e$data), 
+                              values = sort(colnames(e$data)), 
                               textvariable = e$variable2)
   tkgrid(data_labels2, row = 2, column = 1, sticky="ew", padx = 2)
   tkfocus(data_labels2) 
+  
+  set_val <- function(){
+    dataname <- tclvalue(e$dataname)
+    if (dataname == "Load User File"){
+      data <- getcsvfile()
+      assign("data", data, envir = e)
+    }
+    if(dataname != "Load User File"){
+      data <- get(dataname, .GlobalEnv)
+      assign("data", data, envir = e)
+    }
+    tkconfigure(data_labels1, values = sort(colnames(e$data)))
+    tkconfigure(data_labels2, values = sort(colnames(e$data)))
+  }
+  
+  tkconfigure(data_combo, postcommand = function(){
+    e$variable1<-tclVar("Choose Variable")
+    e$variable2<-tclVar("Choose Variable")
+    tkconfigure(data_labels1, textvariable = e$variable1)
+    tkconfigure(data_labels2, textvariable = e$variable2)
+  })
+  tkconfigure(data_labels1, postcommand = set_val)
+  tkbind(data_labels1, "<Return>", function(W) tcl(W, "invoke"))
   
   #Conf.level Slider
   put_label(label_frame, "conf.level:", 3, 0)
@@ -1706,11 +1767,6 @@ tfun<-function(){
   paired_check <-ttkcheckbutton (label_frame , variable = e$paired)
   tkgrid (paired_check , row = 6 , column = 1 , stick = "w" ,padx = 2)
   
-  #Iterations # for when resampling is added
-  #put_label(label_frame, "Iterations:",6,0)
-  #iter_frame <- tkspinbox(label_frame, from = 10, to = 10000, increment = 10, textvariable = e$iter, width = 6)
-  #tkgrid(iter_frame, row = 6, column = 1, sticky="w", padx = 2)
-  
   #Draw Cancel Button
   button_frame <- ttkframe(frame)
   cancel_button <- ttkbutton(button_frame, text = "cancel")
@@ -1730,16 +1786,12 @@ tfun<-function(){
 
 # onesam_tfun
 onesam_tfun<-function(){
-  
-  
   #Data Model: environment called "e"
   e <- new.env()
   e$dataname <- tclVar("Choose one"); 
   e$dataframe <- tclVar("NULL"); 
   e$variable1 <- tclVar("Choose one");
   e$alternative <- tclVar("two.sided"); 
-  #e$paired<- tclVar(FALSE);
-  #e$var <- tclVar(FALSE); 
   e$conf.level <- tclVar(95); 
   e$mu <- tclVar(0);
   
@@ -1787,7 +1839,6 @@ onesam_tfun<-function(){
   tkfocus(data_combo)                      # give focus
   
   tkwait.variable(e$dataname)
-  
   dataname <-tclvalue(e$dataname)
   if (dataname == "Load User File"){
     dataframe <- getcsvfile()
@@ -1804,6 +1855,25 @@ onesam_tfun<-function(){
                               textvariable = e$variable1)
   tkgrid(data_labels1, row = 1, column = 1, sticky="ew", padx = 2)
   tkfocus(data_labels1) 
+  
+  set_val <- function(){
+    dataname <- tclvalue(e$dataname)
+    if (dataname == "Load User File"){
+      dataframe <- getcsvfile()
+      assign("dataframe", dataframe, envir = e)
+    }
+    if(dataname != "Load User File"){
+      dataframe <- get(dataname, .GlobalEnv)
+      assign("dataframe", dataframe, envir = e)
+    }
+    tkconfigure(data_labels1, values = sort(colnames(e$dataframe)))
+  }
+  tkconfigure(data_combo, postcommand = function(){
+    e$variable1<-tclVar("Choose Variable")
+    tkconfigure(data_labels1, textvariable = e$variable1)
+  })
+  tkconfigure(data_labels1, postcommand = set_val)
+  tkbind(data_labels1, "<Return>", function(W) tcl(W, "invoke"))
   
   #Mu Entry
   put_label(label_frame, "Mu:",2,0)
@@ -1862,8 +1932,6 @@ onesam_tfun<-function(){
 
 # shapirofun
 shapirofun<-function(){
-  
-  
   #Data Model: environment called "e"
   e <- new.env()
   e$dataname <- tclVar("Choose one"); 
@@ -1886,16 +1954,6 @@ shapirofun<-function(){
     
     #Plotting
     if(tclvalue(e$qq)>0){
-      #graph viewer
-      # hscale <- 2    # Horizontal scaling
-      #vscale <- 2   # Vertical scaling
-      # plot.shap <- function() {
-      #  qqnorm(e$variablevalue)
-      #  qqline(e$variablevalue, col = 2)
-      #}
-      #graph <- tkrplot(label_frame, fun = plot.shap,
-      #                 hscale = hscale, vscale = vscale)
-      #tkgrid(graph, row = 3, column = 1, rowspan = 1, sticky = "w", padx = 2)
       qqnorm(e$variablevalue)
       qqline(e$variablevalue, col = 2)
     }
@@ -1947,6 +2005,26 @@ shapirofun<-function(){
   tkgrid(data_labels1, row = 1, column = 1, sticky="ew", padx = 2)
   tkfocus(data_labels1) 
   
+  set_val <- function(){
+    dataname <- tclvalue(e$dataname)
+    if (dataname == "Load User File"){
+      dataframe <- getcsvfile()
+      assign("dataframe", dataframe, envir = e)
+    }
+    if(dataname != "Load User File"){
+      dataframe <- get(dataname, .GlobalEnv)
+      assign("dataframe", dataframe, envir = e)
+    }
+    tkconfigure(data_labels1, values = sort(colnames(e$dataframe)))
+    }
+  tkconfigure(data_combo, postcommand = function(){
+    e$variablename<-tclVar("Choose Variable")
+    e$variablevalue<-tclVar("Choose Variable")
+    tkconfigure(data_labels1, textvariable = e$variablename)
+  })
+  tkconfigure(data_labels1, postcommand = set_val)
+  tkbind(data_labels1, "<Return>", function(W) tcl(W, "invoke"))
+  
   #qqplot Checkbox
   put_label ( label_frame , "qqplot:" , 2 , 0)
   qqplot_check <-ttkcheckbutton (label_frame , variable = e$qq)
@@ -1972,8 +2050,6 @@ shapirofun<-function(){
 
 # bartlettsfun
 bartlettsfun<-function(){
-  
-  
   #Data Model: environment called "e"
   e <- new.env()
   e$dataname <- tclVar("Choose one"); 
@@ -2001,15 +2077,6 @@ bartlettsfun<-function(){
     
     #Plotting
     if(tclvalue(e$plot)>0){
-      #graph viewer
-      # hscale <- 2    # Horizontal scaling
-      #vscale <- 2   # Vertical scaling
-      # plot.shap <- function() {
-      ###plotting functions
-      #}
-      #graph <- tkrplot(label_frame, fun = plot.shap,
-      #                 hscale = hscale, vscale = vscale)
-      #tkgrid(graph, row = 3, column = 1, rowspan = 1, sticky = "w", padx = 2)
       vals<-c(e$variable1value, e$variable2value)
       names<-as.factor(c(rep(e$variable1name,length(e$variable1value)),rep(e$variable2name,length(e$variable2value))))
       boxplot(vals ~ names)
@@ -2045,8 +2112,7 @@ bartlettsfun<-function(){
   tkfocus(data_combo)                      # give focus
   
   tkwait.variable (e$dataname)
-  
-  dataname <- tclvalue(e$dataname)
+  dataname <- tclvalue(e$dataname) 
   if (dataname == "Load User File"){
     dataframe <- getcsvfile()
     assign("dataframe", dataframe, envir = e)
@@ -2055,6 +2121,7 @@ bartlettsfun<-function(){
     dataframe <- get(dataname, .GlobalEnv)
     assign("dataframe", dataframe, envir = e)
   }
+  
   #Variable 1 Combobox
   put_label(label_frame, "Variable 1:",1,0)
   data_labels1 <- ttkcombobox(label_frame, state = "readonly", 
@@ -2070,6 +2137,30 @@ bartlettsfun<-function(){
                               textvariable = e$variable2name)
   tkgrid(data_labels2, row = 2, column = 1, sticky="ew", padx = 2)
   tkfocus(data_labels2) 
+  
+  set_val <- function(){
+    dataname <- tclvalue(e$dataname)
+    if (dataname == "Load User File"){
+      dataframe <- getcsvfile()
+      assign("dataframe", dataframe, envir = e)
+    }
+    if(dataname != "Load User File"){
+      dataframe <- get(dataname, .GlobalEnv)
+      assign("dataframe", dataframe, envir = e)
+    }
+    tkconfigure(data_labels1, values = sort(colnames(e$dataframe)))
+    tkconfigure(data_labels2, values = sort(colnames(e$dataframe)))
+  }
+  tkconfigure(data_combo, postcommand = function(){
+    e$variable1name<-tclVar("Choose Variable")
+    e$variable1value<-tclVar("Choose Variable")
+    e$variable2name<-tclVar("Choose Variable")
+    e$variable2value<-tclVar("Choose Variable")
+    tkconfigure(data_labels1, textvariable = e$variable1name)
+    tkconfigure(data_labels2, textvariable = e$variable2name)
+  })
+  tkconfigure(data_labels1, postcommand = set_val)
+  tkbind(data_labels1, "<Return>", function(W) tcl(W, "invoke"))
   
   #Plot Checkbox
   put_label ( label_frame , "plot:" , 3 , 0)
@@ -2091,13 +2182,12 @@ bartlettsfun<-function(){
   tkconfigure(cancel_button, 
               command = function() tkdestroy(window))
   tkbind("TButton", "<Return>", function(W) tcl(W, "invoke"))
+  
   tkfocus(window)
 }
 
 # F_var_fun
 F_var_fun<-function(){
-  
-  
   #Data Model: environment called "e"
   e <- new.env()
   e$dataname <- tclVar("Choose one"); 
@@ -2133,15 +2223,6 @@ F_var_fun<-function(){
     
     #Plotting
     if(tclvalue(e$plot)>0){
-      #graph viewer
-      # hscale <- 2    # Horizontal scaling
-      #vscale <- 2   # Vertical scaling
-      # plot.shap <- function() {
-      ###plotting functions
-      #}
-      #graph <- tkrplot(label_frame, fun = plot.shap,
-      #                 hscale = hscale, vscale = vscale)
-      #tkgrid(graph, row = 3, column = 1, rowspan = 1, sticky = "w", padx = 2)
       vals<-c(e$variable1value, e$variable2value)
       names<-as.factor(c(rep(e$variable1name,length(e$variable1value)),rep(e$variable2name,length(e$variable2value))))
       boxplot(vals ~ names)
@@ -2177,7 +2258,6 @@ F_var_fun<-function(){
   tkfocus(data_combo)                      # give focus
   
   tkwait.variable (e$dataname)
-  
   dataname <- tclvalue(e$dataname)
   if (dataname == "Load User File"){
     dataframe <- getcsvfile()
@@ -2187,6 +2267,7 @@ F_var_fun<-function(){
     dataframe <- get(dataname, .GlobalEnv)
     assign("dataframe", dataframe, envir = e)
   }
+  
   #Variable 1 Combobox
   put_label(label_frame, "Variable 1:",1,0)
   data_labels1 <- ttkcombobox(label_frame, state = "readonly", 
@@ -2202,6 +2283,30 @@ F_var_fun<-function(){
                               textvariable = e$variable2name)
   tkgrid(data_labels2, row = 2, column = 1, sticky="ew", padx = 2)
   tkfocus(data_labels2) 
+  
+  set_val <- function(){
+    dataname <- tclvalue(e$dataname)
+    if (dataname == "Load User File"){
+      dataframe <- getcsvfile()
+      assign("dataframe", dataframe, envir = e)
+    }
+    if(dataname != "Load User File"){
+      dataframe <- get(dataname, .GlobalEnv)
+      assign("dataframe", dataframe, envir = e)
+    }
+    tkconfigure(data_labels1, values = sort(colnames(e$dataframe)))
+    tkconfigure(data_labels2, values = sort(colnames(e$dataframe)))
+  }
+  tkconfigure(data_combo, postcommand = function(){
+    e$variable1name<-tclVar("Choose Variable")
+    e$variable1value<-tclVar("Choose Variable")
+    e$variable2name<-tclVar("Choose Variable")
+    e$variable2value<-tclVar("Choose Variable")
+    tkconfigure(data_labels1, textvariable = e$variable1name)
+    tkconfigure(data_labels2, textvariable = e$variable2name)
+  })
+  tkconfigure(data_labels1, postcommand = set_val)
+  tkbind(data_labels1, "<Return>", function(W) tcl(W, "invoke"))
   
   #Conf.level Slider
   put_label(label_frame, "conf.level:", 3, 0)
@@ -2287,15 +2392,6 @@ LevenesVarTestFun<-function(){
     
     #Plotting
     if(tclvalue(e$plot)>0){
-      #graph viewer
-      # hscale <- 2    # Horizontal scaling
-      #vscale <- 2   # Vertical scaling
-      # plot.shap <- function() {
-      ###plotting functions
-      #}
-      #graph <- tkrplot(label_frame, fun = plot.shap,
-      #                 hscale = hscale, vscale = vscale)
-      #tkgrid(graph, row = 3, column = 1, rowspan = 1, sticky = "w", padx = 2)
       boxplot(yvars ~ factor)
       stripchart(yvars ~ factor,pch=16, vert=TRUE, add=TRUE,cex=1)
     }
@@ -2329,12 +2425,6 @@ LevenesVarTestFun<-function(){
   tkfocus(data_combo)                      # give focus
   
   tkwait.variable(e$dataname)
-  
-  data_combo <- ttkcombobox(label_frame, state = "readonly", 
-                            values = tclvalue(e$dataname), 
-                            textvariable = e$dataname)
-  tkgrid(data_combo, row = 0, column = 1, sticky="ew", padx = 2)
-  tkfocus(data_combo)
   dataname <-tclvalue(e$dataname)
   if (dataname == "Load User File"){
     dataframe <- getcsvfile()
@@ -2344,6 +2434,7 @@ LevenesVarTestFun<-function(){
     dataframe <- get(dataname, .GlobalEnv)
     assign("dataframe", dataframe, envir = e)
   }
+  
   #Variable 1 Combobox
   put_label(label_frame, "Variable 1:",1,0)
   data_labels1 <- ttkcombobox(label_frame, state = "readonly", 
@@ -2359,6 +2450,30 @@ LevenesVarTestFun<-function(){
                               textvariable = e$variable2name)
   tkgrid(data_labels2, row = 2, column = 1, sticky="ew", padx = 2)
   tkfocus(data_labels2) 
+  
+  set_val <- function(){
+    dataname <- tclvalue(e$dataname)
+    if (dataname == "Load User File"){
+      dataframe <- getcsvfile()
+      assign("dataframe", dataframe, envir = e)
+    }
+    if(dataname != "Load User File"){
+      dataframe <- get(dataname, .GlobalEnv)
+      assign("dataframe", dataframe, envir = e)
+    }
+    tkconfigure(data_labels1, values = sort(colnames(e$dataframe)))
+    tkconfigure(data_labels2, values = sort(colnames(e$dataframe)))
+  }
+  tkconfigure(data_combo, postcommand = function(){
+    e$variable1name<-tclVar("Choose Variable")
+    e$variable1value<-tclVar("Choose Variable")
+    e$variable2name<-tclVar("Choose Variable")
+    e$variable2value<-tclVar("Choose Variable")
+    tkconfigure(data_labels1, textvariable = e$variable1name)
+    tkconfigure(data_labels2, textvariable = e$variable2name)
+  })
+  tkconfigure(data_labels1, postcommand = set_val)
+  tkbind(data_labels1, "<Return>", function(W) tcl(W, "invoke"))
   
   #Hypothesis Radiobuttons
   put_label(label_frame, "Center:",3,0)
@@ -2394,7 +2509,6 @@ LevenesVarTestFun<-function(){
 
 # summar_fun
 summar_fun<-function(){
-  
   skew<-function (x, na.rm = TRUE) {
     if (is.matrix(x)) 
       apply(x, 2, skew, na.rm = na.rm)
@@ -2427,9 +2541,6 @@ summar_fun<-function(){
   e$dataframe <- tclVar("NULL"); 
   e$variable1name<-tclVar("Choose Variable")
   e$variable1value<-tclVar("Choose Variable")
-  #e$variable2name<-tclVar("Choose Variable")
-  #e$variable2value<-tclVar("Choose Variable")
-  #e$plot<-tclVar(FALSE)
   e$type<-tclVar("Compact")
   #e$conf.level<-tclVar(95)
   printfun<-function(k){
@@ -2464,6 +2575,7 @@ summar_fun<-function(){
     assign("Results", out, envir = envir) 
     tkdestroy(window)
   }
+  
   #Begin GUI Setup
   window <- tktoplevel()
   tkwm.title(window, "Data Summary Dialog")
@@ -2492,12 +2604,7 @@ summar_fun<-function(){
   tkfocus(data_combo)                      # give focus
   
   tkwait.variable (e$dataname)
-  
-  data_combo <- ttkcombobox(label_frame, state = "readonly", 
-                            values = tclvalue(e$dataname), 
-                            textvariable = e$dataname)
-  tkgrid(data_combo, row = 0, column = 1, sticky="ew", padx = 2)
-  tkfocus(data_combo) 
+   
   dataname <- tclvalue(e$dataname)
   if (dataname == "Load User File"){
     dataframe <- getcsvfile()
@@ -2514,6 +2621,30 @@ summar_fun<-function(){
                               textvariable = e$variable1name)
   tkgrid(data_labels1, row = 1, column = 1, sticky="ew", padx = 2)
   tkfocus(data_labels1) 
+  
+  set_val <- function(){
+    dataname <- tclvalue(e$dataname)
+    if (dataname == "Load User File"){
+      dataframe <- getcsvfile()
+      assign("dataframe", dataframe, envir = e)
+    }
+    if(dataname != "Load User File"){
+      dataframe <- get(dataname, .GlobalEnv)
+      assign("dataframe", dataframe, envir = e)
+    }
+    tkconfigure(data_labels1, values = sort(colnames(e$dataframe)))
+    #tkconfigure(data_labels2, values = sort(colnames(e$dataframe)))
+  }
+  tkconfigure(data_combo, postcommand = function(){
+    e$variable1name<-tclVar("Choose Variable")
+    e$variable1value<-tclVar("Choose Variable")
+    #e$variable2name<-tclVar("Choose Variable")
+    #e$variable2value<-tclVar("Choose Variable")
+    tkconfigure(data_labels1, textvariable = e$variable1name)
+    #tkconfigure(data_labels2, textvariable = e$variable2name)
+  })
+  tkconfigure(data_labels1, postcommand = set_val)
+  tkbind(data_labels1, "<Return>", function(W) tcl(W, "invoke"))
   
   #Summary Radiobuttons
   put_label(label_frame, "Summary Type:",2,0)
@@ -2544,8 +2675,6 @@ summar_fun<-function(){
 
 # Assoc_fun
 Assoc_fun<-function(){
-  
-  
   #Data Model: environment called "e"
   e <- new.env()
   e$dataname <- tclVar("Choose one"); 
@@ -2631,20 +2760,14 @@ Assoc_fun<-function(){
     }
     #Plotting
     if(as.numeric(tclvalue(e$plot))>0){
-      #graph viewer
-      # hscale <- 2    # Horizontal scaling
-      #vscale <- 2   # Vertical scaling
-      # plot.shap <- function() {
-      ###plotting functions
-      #}
-      #graph <- tkrplot(label_frame, fun = plot.shap,
-      #                 hscale = hscale, vscale = vscale)
-      #tkgrid(graph, row = 3, column = 1, rowspan = 1, sticky = "w", padx = 2)
       plot(x=variable1value, y=variable2value,xlab=e$variable1name, ylab=e$variable2name)
     }
     tkdestroy(window)
   }
+  
+  ################
   #Begin GUI Setup
+  ################
   window <- tktoplevel()
   tkwm.title(window, "Association Test Dialog")
   frame <- ttkframe(window, padding = c(3,3,12,12))
@@ -2663,6 +2786,7 @@ Assoc_fun<-function(){
     label <- ttklabel(parent, text = text)
     tkgrid(label, row = row, column = column, sticky = "e")
   }
+  
   #Data Combobox
   put_label(label_frame, "Data:",0,0)
   data_combo <- ttkcombobox(label_frame, state = "readonly", 
@@ -2672,12 +2796,7 @@ Assoc_fun<-function(){
   tkfocus(data_combo)                      # give focus
   
   tkwait.variable (e$dataname)
-  
-  data_combo <- ttkcombobox(label_frame, state = "readonly",
-                            values = tclvalue(e$dataname),
-                            textvariable = e$dataname)
-  tkgrid(data_combo, row = 0, column = 1, sticky="ew", padx = 2)
-  tkfocus(data_combo)
+
   dataname <- tclvalue(e$dataname)
   if (dataname == "Load User File"){
     dataframe <- getcsvfile()
@@ -2702,6 +2821,30 @@ Assoc_fun<-function(){
                               textvariable = e$variable2name)
   tkgrid(data_labels2, row = 2, column = 1, sticky="ew", padx = 2)
   tkfocus(data_labels2) 
+  
+  set_val <- function(){
+    dataname <- tclvalue(e$dataname)
+    if (dataname == "Load User File"){
+      dataframe <- getcsvfile()
+      assign("dataframe", dataframe, envir = e)
+    }
+    if(dataname != "Load User File"){
+      dataframe <- get(dataname, .GlobalEnv)
+      assign("dataframe", dataframe, envir = e)
+    }
+    tkconfigure(data_labels1, values = sort(colnames(e$dataframe)))
+    tkconfigure(data_labels2, values = sort(colnames(e$dataframe)))
+  }
+  tkconfigure(data_combo, postcommand = function(){
+    e$variable1name<-tclVar("Choose Variable")
+    e$variable1value<-tclVar("Choose Variable")
+    e$variable2name<-tclVar("Choose Variable")
+    e$variable2value<-tclVar("Choose Variable")
+    tkconfigure(data_labels1, textvariable = e$variable1name)
+    tkconfigure(data_labels2, textvariable = e$variable2name)
+  })
+  tkconfigure(data_labels1, postcommand = set_val)
+  tkbind(data_labels1, "<Return>", function(W) tcl(W, "invoke"))
   
   #Conf.level Slider
   put_label(label_frame, "conf.level:", 3, 0)
@@ -2779,8 +2922,6 @@ Assoc_fun<-function(){
 
 # Fisher_exact_fun
 Fisher_exact_fun<-function(){
-  
-  
   #Data Model: environment called "e"
   e <- new.env()
   e$dataname <- tclVar("Choose one"); 
@@ -2831,15 +2972,6 @@ Fisher_exact_fun<-function(){
     
     #Plotting
     if(tclvalue(e$plot)>0){
-      #graph viewer
-      # hscale <- 2    # Horizontal scaling
-      #vscale <- 2   # Vertical scaling
-      # plot.shap <- function() {
-      ###plotting functions
-      #}
-      #graph <- tkrplot(label_frame, fun = plot.shap,
-      #                 hscale = hscale, vscale = vscale)
-      #tkgrid(graph, row = 3, column = 1, rowspan = 1, sticky = "w", padx = 2)
       vals<-c(e$variable1value, e$variable2value)
       names<-as.factor(c(rep(e$variable1name,length(e$variable1value)),rep(e$variable2name,length(e$variable2value))))
       boxplot(vals ~ names)
@@ -2866,6 +2998,7 @@ Fisher_exact_fun<-function(){
     label <- ttklabel(parent, text = text)
     tkgrid(label, row = row, column = column, sticky = "e")
   }
+  
   #Data Combobox
   put_label(label_frame, "Data:",0,0)
   data_combo <- ttkcombobox(label_frame, state = "readonly", 
@@ -2900,6 +3033,30 @@ Fisher_exact_fun<-function(){
                               textvariable = e$variable2name)
   tkgrid(data_labels2, row = 2, column = 1, sticky="ew", padx = 2)
   tkfocus(data_labels2) 
+  
+  set_val <- function(){
+    dataname <- tclvalue(e$dataname)
+    if (dataname == "Load User File"){
+      dataframe <- getcsvfile()
+      assign("dataframe", dataframe, envir = e)
+    }
+    if(dataname != "Load User File"){
+      dataframe <- get(dataname, .GlobalEnv)
+      assign("dataframe", dataframe, envir = e)
+    }
+    tkconfigure(data_labels1, values = sort(colnames(e$dataframe)))
+    tkconfigure(data_labels2, values = sort(colnames(e$dataframe)))
+  }
+  tkconfigure(data_combo, postcommand = function(){
+    e$variable1name<-tclVar("Choose Variable")
+    e$variable1value<-tclVar("Choose Variable")
+    e$variable2name<-tclVar("Choose Variable")
+    e$variable2value<-tclVar("Choose Variable")
+    tkconfigure(data_labels1, textvariable = e$variable1name)
+    tkconfigure(data_labels2, textvariable = e$variable2name)
+  })
+  tkconfigure(data_labels1, postcommand = set_val)
+  tkbind(data_labels1, "<Return>", function(W) tcl(W, "invoke"))
   
   #Conf.level Slider
   put_label(label_frame, "conf.level:", 3, 0)
@@ -2969,8 +3126,6 @@ Fisher_exact_fun<-function(){
 
 # chisq_fun
 chisq_fun<-function(){
-  
-  
   #Data Model: environment called "e"
   e <- new.env()
   e$dataname <- tclVar("Choose one"); 
@@ -3017,16 +3172,7 @@ chisq_fun<-function(){
     print(out)
     
     #Plotting
-    if(tclvalue(e$plot)>0){
-      #graph viewer
-      # hscale <- 2    # Horizontal scaling
-      #vscale <- 2   # Vertical scaling
-      # plot.shap <- function() {
-      ###plotting functions
-      #}
-      #graph <- tkrplot(label_frame, fun = plot.shap,
-      #                 hscale = hscale, vscale = vscale)
-      #tkgrid(graph, row = 3, column = 1, rowspan = 1, sticky = "w", padx = 2)
+    if(as.numeric(tclvalue(e$plot))>0){
       vals<-c(e$variable1value, e$variable2value)
       names<-as.factor(c(rep(e$variable1name,length(e$variable1value)),rep(e$variable2name,length(e$variable2value))))
       boxplot(vals ~ names)
@@ -3053,6 +3199,7 @@ chisq_fun<-function(){
     label <- ttklabel(parent, text = text)
     tkgrid(label, row = row, column = column, sticky = "e")
   }
+  
   #Data Combobox
   put_label(label_frame, "Data:",0,0)
   data_combo <- ttkcombobox(label_frame, state = "readonly", 
@@ -3072,6 +3219,7 @@ chisq_fun<-function(){
     dataframe <- get(dataname, .GlobalEnv)
     assign("dataframe", dataframe, envir = e)
   }
+  
   #Variable 1 Combobox
   put_label(label_frame, "Variable 1:",1,0)
   data_labels1 <- ttkcombobox(label_frame, state = "readonly", 
@@ -3087,6 +3235,30 @@ chisq_fun<-function(){
                               textvariable = e$variable2name)
   tkgrid(data_labels2, row = 2, column = 1, sticky="ew", padx = 2)
   tkfocus(data_labels2) 
+  
+  set_val <- function(){
+    dataname <- tclvalue(e$dataname)
+    if (dataname == "Load User File"){
+      dataframe <- getcsvfile()
+      assign("dataframe", dataframe, envir = e)
+    }
+    if(dataname != "Load User File"){
+      dataframe <- get(dataname, .GlobalEnv)
+      assign("dataframe", dataframe, envir = e)
+    }
+    tkconfigure(data_labels1, values = sort(colnames(e$dataframe)))
+    tkconfigure(data_labels2, values = sort(colnames(e$dataframe)))
+  }
+  tkconfigure(data_combo, postcommand = function(){
+    e$variable1name<-tclVar("Choose Variable")
+    e$variable1value<-tclVar("Choose Variable")
+    e$variable2name<-tclVar("Choose Variable")
+    e$variable2value<-tclVar("Choose Variable")
+    tkconfigure(data_labels1, textvariable = e$variable1name)
+    tkconfigure(data_labels2, textvariable = e$variable2name)
+  })
+  tkconfigure(data_labels1, postcommand = set_val)
+  tkbind(data_labels1, "<Return>", function(W) tcl(W, "invoke"))
   
   #Monte Carlo Slider
   put_label(label_frame, "Monte Carlo:", 3, 0)
@@ -3135,9 +3307,6 @@ chisq_fun<-function(){
 
 # oneway_fun
 oneway_fun<-function(){
-  
-  
-  
   #Data Model: environment called "e"
   e <- new.env()
   e$dataname <- tclVar("Choose one"); 
@@ -3162,17 +3331,8 @@ oneway_fun<-function(){
     print(summary(out))
     
     #Plotting function bells and whistles after the analytical stuff is up to "snuff"
-    if(tclvalue(e$plot)>0){
-      #graph viewer
-      # hscale <- 2    # Horizontal scaling
-      #vscale <- 2   # Vertical scaling
-      # plot.shap <- function() {
-      ###plotting functions
-      #}
-      #graph <- tkrplot(label_frame, fun = plot.shap,
-      #                 hscale = hscale, vscale = vscale)
-      #tkgrid(graph, row = 3, column = 1, rowspan = 1, sticky = "w", padx = 2)
-      ci.bars<-function(ybar,ci,label,ylab) {
+    if(as.numeric(tclvalue(e$plot))>0){
+     ci.bars<-function(ybar,ci,label,ylab) {
         xv<-barplot(ybar,ylim=c(0,max(ybar+ci)),names=label,ylab=ylab,beside=T)
         g<-(max(xv)-min(xv))/50
         for (i in 1:length(xv)){
@@ -3227,6 +3387,7 @@ oneway_fun<-function(){
     dataframe <- get(dataname, .GlobalEnv)
     assign("dataframe", dataframe, envir = e)
   }
+  
   #Independent Variable Combobox
   put_label(label_frame, "Response:",row=1,column=1,sticky="n")
   data_labels1 <- ttkcombobox(label_frame, state = "readonly", 
@@ -3242,6 +3403,30 @@ oneway_fun<-function(){
                               textvariable = e$variable1name,width=25)
   tkgrid(data_labels2, row = 2, column = 2, sticky="ew", padx = 2)
   tkfocus(data_labels2) 
+  
+  set_val <- function(){
+    dataname <- tclvalue(e$dataname)
+    if (dataname == "Load User File"){
+      dataframe <- getcsvfile()
+      assign("dataframe", dataframe, envir = e)
+    }
+    if(dataname != "Load User File"){
+      dataframe <- get(dataname, .GlobalEnv)
+      assign("dataframe", dataframe, envir = e)
+    }
+    tkconfigure(data_labels1, values = sort(colnames(e$dataframe)))
+    tkconfigure(data_labels2, values = sort(colnames(e$dataframe)))
+  }
+  tkconfigure(data_combo, postcommand = function(){
+    e$variable1name<-tclVar("Choose Variable")
+    e$variable1value<-tclVar("Choose Variable")
+    e$responsevariablename<-tclVar("Choose Response")
+    e$responsevariablename<-tclVar("Choose Response")
+    tkconfigure(data_labels1, textvariable = e$responsevariablename)
+    tkconfigure(data_labels2, textvariable = e$variable1name)
+  })
+  tkconfigure(data_labels1, postcommand = set_val)
+  tkbind(data_labels1, "<Return>", function(W) tcl(W, "invoke"))
   
   #Plot Checkbox # not yet operational (within OK function)
   put_label ( label_frame , "plot:" , 5 , 0,sticky="e")
@@ -3268,9 +3453,6 @@ oneway_fun<-function(){
 
 # fact_fun
 fact_fun<-function(){
-  
-  
-  
   #Data Model: environment called "e"
   e <- new.env()
   e$dataname <- tclVar("Choose one"); 
@@ -3282,7 +3464,6 @@ fact_fun<-function(){
   e$variable2name<-tclVar("Choose Factor 2")
   e$variable2value<-tclVar("Choose Variable")
   e$interaction<-tclVar("NULL")
-  e$variable2value<-tclVar("Choose")
   e$plot<-tclVar(FALSE)
   
   #OK Function
@@ -3393,6 +3574,38 @@ fact_fun<-function(){
   tkgrid(data_labels4, row = 2, column = 4, sticky="ew", padx = 2)
   tkfocus(data_labels4) 
   
+  set_val <- function(){
+    dataname <- tclvalue(e$dataname)
+    if (dataname == "Load User File"){
+      dataframe <- getcsvfile()
+      assign("dataframe", dataframe, envir = e)
+    }
+    if(dataname != "Load User File"){
+      dataframe <- get(dataname, .GlobalEnv)
+      assign("dataframe", dataframe, envir = e)
+    }
+    tkconfigure(data_labels1, values = sort(colnames(e$dataframe)))
+    tkconfigure(data_labels2, values = sort(colnames(e$dataframe)))
+    tkconfigure(data_labels3, values = c("NULL"," +"," *"))
+    tkconfigure(data_labels4, values = sort(colnames(e$dataframe)))
+  }
+  
+  tkconfigure(data_combo, postcommand = function(){
+    e$variable1name<-tclVar("Choose Variable")
+    e$variable1value<-tclVar("Choose Variable")
+    e$variable2name<-tclVar("Choose Variable")
+    e$variable2value<-tclVar("Choose Variable")
+    e$responsevariablename<-tclVar("Choose Variable")
+    e$responsevariablevalue<-tclVar("Choose Variable")
+    e$interaction<-tclVar("NULL")
+    tkconfigure(data_labels1, textvariable = e$responsevariablename)
+    tkconfigure(data_labels2, textvariable = e$variable1name)
+    tkconfigure(data_labels3, textvariable = e$interaction)
+    tkconfigure(data_labels4, textvariable = e$variable2name)
+  })
+  tkconfigure(data_labels1, postcommand = set_val)
+  tkbind(data_labels1, "<Return>", function(W) tcl(W, "invoke"))
+  
   #Plot Checkbox #not yet operational (within OK function)
   put_label ( label_frame , "plot:" , 5 , 0,sticky="e")
   plot_check <-ttkcheckbutton (label_frame , variable = e$plot)
@@ -3426,7 +3639,6 @@ simp_lmfun<-function(){
   e$responsevariablevalue<-tclVar("Choose Variable")
   e$variable1name<-tclVar("Choose Predictor Variable")
   e$variable1value<-tclVar("Choose Variable")
-  e$interaction<-tclVar("NULL")
   e$plot<-tclVar(FALSE)
   
   #OK Function
@@ -3533,6 +3745,31 @@ simp_lmfun<-function(){
                               textvariable = e$variable1name,width=25)
   tkgrid(data_labels2, row = 2, column = 2, sticky="ew", padx = 2)
   tkfocus(data_labels2) 
+  
+  set_val <- function(){
+    dataname <- tclvalue(e$dataname)
+    if (dataname == "Load User File"){
+      dataframe <- getcsvfile()
+      assign("dataframe", dataframe, envir = e)
+    }
+    if(dataname != "Load User File"){
+      dataframe <- get(dataname, .GlobalEnv)
+      assign("dataframe", dataframe, envir = e)
+    }
+    tkconfigure(data_labels1, values = sort(colnames(e$dataframe)))
+    tkconfigure(data_labels2, values = sort(colnames(e$dataframe)))
+  }
+  
+  tkconfigure(data_combo, postcommand = function(){
+    e$variable1name<-tclVar("Choose Variable")
+    e$variable1value<-tclVar("Choose Variable")
+    e$responsevariablename<-tclVar("Choose Variable")
+    e$responsevariablevalue<-tclVar("Choose Variable")
+    tkconfigure(data_labels1, textvariable = e$responsevariablename)
+    tkconfigure(data_labels2, textvariable = e$variable1name)
+  })
+  tkconfigure(data_labels1, postcommand = set_val)
+  tkbind(data_labels1, "<Return>", function(W) tcl(W, "invoke"))
   
   #Plot Checkbox
   put_label ( label_frame , "plot:" , 5 , 0,sticky="e")
@@ -4395,9 +4632,6 @@ divind_fun<-function(){
 
 # transf_fun
 trans_fun<-function(){
-  
-  
-  
   #Data Model: environment called "e"
   e <- new.env()
   e$dataname <- tclVar("Choose one"); 
@@ -5107,10 +5341,6 @@ NPMANOVA_fun<-function(){ #EOC + JBR
 
 # NP Hotelling Function 
 NPHotellingt_fun<-function(){ #EOC + JBR
-  
-  
-  
-  
   #Data Model: enviroment called "e"
   e<-new.env()
   e$dataname <- tclVar("Choose Dataframe");
@@ -5283,10 +5513,6 @@ NPHotellingt_fun<-function(){ #EOC + JBR
 
 # Distance Function
 dist_fun<-function(){ #EOC + JBR
-  
-  
-  
-  
   #Data Model: enviroment called "e"
   e<-new.env()
   e$dataname <- tclVar("Choose one"); 
@@ -5545,9 +5771,6 @@ cluster_fun<-function(){
 
 # prcomp Function
 prcomp_fun<-function(){
-  
-  
-  
   #Data Model: enviroment called "e"
   e<-new.env()
   e$dataname <- tclVar("Choose Dataframe"); 
@@ -5655,8 +5878,6 @@ prcomp_fun<-function(){
 
 #Correspondence Analysis Function
 correspondence_fun<-function(){
-  
-  
   #Data Model: enviroment called "e"
   e<-new.env()
   e$dataname <- tclVar("Choose Dataframe"); 
@@ -5788,10 +6009,6 @@ correspondence_fun<-function(){
 
 # PCoA Function
 PCoA_fun<-function(){
-  
-  
-  
-  
   #Data Model: enviroment called "e"
   e<-new.env()
   e$dataname <- tclVar("Choose one"); 
@@ -6067,10 +6284,6 @@ NMDS_fun<-function(){
 
 # 2-way Mantel Function
 mantel2way_fun<-function(){
-  
-  
-  
-  
   #Data Model: enviroment called "e"
   e<-new.env()
   e$dataname <- tclVar("Choose Dataframe")
@@ -6273,10 +6486,6 @@ mantel2way_fun<-function(){
 
 # 3 Way Mantel Function
 mantel3_fun<-function(){
-  
-  
-  
-  
   #Data Model: enviroment called "e"
   e<-new.env()
   e$dataname <- tclVar("Choose Dataframe")
@@ -6723,149 +6932,6 @@ ripleys_K_fun<-function() {
   tkfocus(window)
 }
 
-# Spatially Defined Connections Function
-#  spatially_defined_fun<-function(){
-#   spdfs.fun<-function()c(unlist(lapply(c(ls(envir = .GlobalEnv),ls("package:zooaRchGUI")), function(SpatialPolygonsDataFrame) if(class(get(SpatialPolygonsDataFrame))[1] == "SpatialPolygonsDataFrame")c(unlist(SpatialPolygonsDataFrame)))), "Load User File", "Load Shape File")
-#   
-#   #Data Model: enviroment called e
-#   e<-new.env()
-#   e$dataname<-tclVar("Choose Data")
-#   e$dataframe<-tclVar("NULL")
-#   e$choice<-tclVar("Rook")
-#   e$voronicheck<-tclVar("FALSE")
-#   
-#   #Ok Function
-#   Okfun<-function() {
-#     switch(tclvalue(e$choice),
-#            Queen = {fundata.queen <- spdep::poly2nb(e$dataframe, queen = TRUE)
-#            plot(e$dataframe,col="light gray")
-#            title(main="Queen Connectivity")
-#            plot(fundata.queen,sp::coordinates(e$dataframe),add=TRUE,col="red",lwd=2)
-#            coords<-sp::coordinates(e$dataframe)
-#            if(tclvalue(e$voronicheck) == 1){
-#              voroni_fun(fundata.queen, coords)
-#            }},
-#            Rook = {fundata.rook <- spdep::poly2nb(e$dataframe, queen = FALSE)
-#            plot(e$dataframe,col="light gray")
-#            title(main="Rook Connectivity")
-#            plot(fundata.rook,sp::coordinates(e$dataframe),add=TRUE,col="blue",lwd=2)
-#            coords<-sp::coordinates(e$dataframe)
-#            if(tclvalue(e$voronicheck) == 1){
-#              voroni_fun(fundata.rook, coords)
-#            }},
-#            Delauney = {coords<-sp::coordinates(e$dataframe)
-#            ID<-row.names(assign(e$dataframe, "data.frame"))
-#            del.nb<-tri2nb(coords, row.names=ID)
-#            plot(e$dataframe, border="grey60")
-#            plot(del.nb, coords, add=TRUE, pch=".", col="red")
-#            text(bbox(e$dataframe)[1,2], bbox(e$dataframe)[2,1], labels="Delauney", cex = 1.5, pos = 2)
-#            if(tclvalue(e$voronicheck) == 1){
-#              voroni_fun(del.nb, coords)
-#            }},
-#            Gabriel = {coords<-coordinates(e$dataframe)
-#            ID<-row.names(assign(e$dataframe, "data.frame"))
-#            gab.nb<-graph2nb(gabrielneigh(coords), row.names = ID)
-#            plot(e$dataframe, border = "grey60")
-#            plot(gab.nb, coords, add = TRUE, pch = ".", col= "red")
-#            text(bbox(e$dataframe)[1,2], bbox(e$dataframe)[2,1], labels = "Gabriel", cex = 1.5, pos = 2)
-#            if(tclvalue(e$voronicheck) == 1){
-#              voroni_fun(gab.nb, coords)
-#            }},
-#            Relative = {coords<-coordinates(e$dataframe)
-#            ID<-row.names(assign(e$dataframe, "data.frame"))
-#            rel.nb<-spdep::graph2nb(spdep::relativeneigh(coords), row.names = ID)
-#            plot(e$dataframe, border = "grey60")
-#            plot(rel.nb, coords, add = TRUE, pch = ".", col = "red")
-#            text(bbox(e$dataframe)[1,2], bbox(e$dataframe)[2,1], labels = "Relative", cex = 1.5, pos = 2)
-#            if(tclvalue(e$voronicheck) == 1){
-#              voroni_fun(rel.nb, coords)}}
-#     )
-#     tkdestroy(window)
-#   }
-#   #Voroni Function
-#   voroni_fun<-function(input.nb, coordsin){
-#     par(mfrow=c(1,3))
-#     plot(input.nb, coordsin)
-#     Mosaic.vm <- tripack::voronoi.mosaic(coordsin[,1],coordsin[,2])
-#     plot(Mosaic.vm)
-#     Polygons.vp <- tripack::voronoi.polygons(Mosaic.vm)
-#     plot(Polygons.vp)
-#   }
-#   #Begin GUI Setup
-#   window<-tktoplevel()
-#   tkwm.title(window, "neighbor_fun")
-#   frame<-ttkframe(window, padding = c(3,3,12,12))
-#   tkpack(frame, expand = TRUE, fill = "both")
-#   
-#   #Layout
-#   label_frame<-ttklabelframe(frame, text = "Neighboring Data Analysis", padding = 10)
-#   tkpack(label_frame, expand = TRUE, fill = "both", padx = 5, pady = 5)
-#   tkgrid.columnconfigure(label_frame, 0, weight = 1)
-#   tkgrid.columnconfigure(label_frame, 1, weight = 1)
-#   tkgrid.columnconfigure(label_frame, 2, weight = 1)
-#   tkgrid.columnconfigure(label_frame, 1, weight = 1)
-#   put_label<-function(parent, text, row, column, sticky, width) {
-#     label<-ttklabel(parent, text = text)
-#     tkgrid(label, row = row, column = column, sticky = sticky)
-#   }
-#   #First Data Combobox
-#   put_label(label_frame, "Input Data:",0,0,sticky="w")
-#   data_combo <- ttkcombobox(label_frame, state = "readonly", 
-#                             values = spdfs.fun(), 
-#                             textvariable = e$dataname)
-#   tkgrid(data_combo, row = 0, column = 1, sticky="w", padx = 2)
-#   tkfocus(data_combo)
-#   
-#   tkwait.variable (e$dataname)
-#   
-#   dataname <- tclvalue(e$dataname)
-#   if (dataname == "Load User File"){
-#     dataframe <- getcsvfile()
-#     assign("dataframe", dataframe, envir = e)
-#   }
-#   else if (dataname == "Load Shape File"){
-#     getshapefile <- function() {
-#       name <- tclvalue(tkgetOpenFile(
-#         filetypes = "{{ESRI Shapefiles} {.shp}}"))
-#       if (name == "") return(data.frame());
-#       data <- shapefile(name)
-#       e$dataframe<-data
-#     }
-#     dataframe <- getshapefile()
-#   }
-#   else{
-#     dataframe <- get(dataname, .GlobalEnv)
-#     assign("dataframe", dataframe, envir = e)
-#   }
-#   #Method Radiobuttons
-#   put_label(label_frame, "Analysis Type:", 3,0, sticky="w")
-#   rb_frame<-ttkframe(label_frame)
-#   sapply(c("Queen", "Rook", "Delauney", "Gabriel", "Relative"), function(i) {
-#     radio_button<-tk2radiobutton(rb_frame, variable = e$choice, text = i, value = i)
-#     tkpack(radio_button, side = "left")
-#   })
-#   tkgrid(rb_frame, row = 3, column = 1, sticky = "w")
-#   
-#   #Voroni Data Checkbox
-#   put_label ( label_frame , "Voroni data:" , 4 , 0,sticky = "w")
-#   plot_check1 <-ttkcheckbutton (label_frame , variable = e$voronicheck)
-#   tkgrid (plot_check1 , row = 4 , column = 1 , sticky = "w" ,padx = 2)
-#   
-#   #Draw Cancel Button
-#   button_frame<-ttkframe(frame)
-#   cancel_button<-ttkbutton(button_frame, text = "Cancel")
-#   
-#   #Draw Ok Button
-#   ok_button<-ttkbutton(button_frame, text = "Ok", command = Okfun)
-#   tkpack(button_frame, fill = "x", padx = 5, pady = 5)
-#   tkpack(ttklabel(button_frame, text = " "), expand = TRUE,fill = "y", side = "left")
-#   sapply(list(cancel_button, ok_button), tkpack, side = "left", padx = 6)
-#   tkconfigure(ok_button, command = Okfun)
-#   tkconfigure(cancel_button, command = function() tkdestroy(window))
-#   tkbind("TButton", "<Return>", function(W) tcl(W, "invoke"))
-#   tkfocus(window)
-# }
-
 # Moran's I/Geary C Function
 moran_geary_fun<-function(){
   spdfs.fun<-function()c(unlist(lapply(c(ls(envir = .GlobalEnv),ls("package:zooaRchGUI")), function(SpatialPolygonsDataFrame) if(class(get(SpatialPolygonsDataFrame))[1] == "SpatialPolygonsDataFrame")c(unlist(SpatialPolygonsDataFrame)))), "Load User File", "Load Shape File")
@@ -7073,8 +7139,6 @@ readland_fun<-function(){
 
 # Multivariate Vector-fitting Function
 multivarfit_fun<-function(){
-  
-  
   matrix.fun<-function()c(unlist(lapply(c(ls(envir = .GlobalEnv),ls("package:zooaRchGUI")), function(matrix) if(class(get(matrix))[1] == "matrix")c(unlist(matrix)))), "Load User File")
   
   #Data Model: enviroment called "e"
@@ -7347,7 +7411,6 @@ gpagen_fun<-function(){
 
 # k-means Single
 kmeans_single_fun<-function(){
-  
   matrix.fun<-function()c(unlist(lapply(c(ls(envir = .GlobalEnv),ls("package:zooaRchGUI")), function(matrix) if(class(get(matrix))[1] == "matrix")c(unlist(matrix)))),"Load User File")
   df.fun<-function()c(unlist(lapply(c(ls(envir = .GlobalEnv),ls("package:zooaRchGUI")), function(matrix) if(class(get(matrix))[1] == "data.frame")c(unlist(matrix)))))
   #Data Model: enviroment called e
@@ -7473,7 +7536,6 @@ kmeans_single_fun<-function(){
 
 # k-means Multi
 kmeans_multi_fun<-function(){
-  
   matrix.fun<-function()c(unlist(lapply(c(ls(envir = .GlobalEnv),ls("package:zooaRchGUI")), function(matrix) if(class(get(matrix))[1] == "matrix")c(unlist(matrix)))),"Load User File")
   df.fun<-function()c(unlist(lapply(c(ls(envir = .GlobalEnv),ls("package:zooaRchGUI")), function(matrix) if(class(get(matrix))[1] == "data.frame")c(unlist(matrix)))))
   
@@ -7659,8 +7721,6 @@ kmeans_multi_fun<-function(){
 # Bayesian functions # all bayesian code from Baath 2016, Bayesian first aid unpublished package https://github.com/rasmusab/bayesian_first_aid
 # Bayesian onesam_tfun # all bayesian code from Baath 2016, Bayesian first aid unpublished package https://github.com/rasmusab/bayesian_first_aid
 Bayes_onesam_tfun<-function(){
-  
-  
   #Data Model: environment called "e"
   e <- new.env()
   e$dataname <- tclVar("Choose one"); 
@@ -7787,8 +7847,6 @@ Bayes_onesam_tfun<-function(){
 
 # Bayes_2tfun
 Bayes_2tfun<-function(){
-  
-  
   #Data Model: environment called "e"
   e <- new.env()
   e$data <- tclVar("Choose one"); 
@@ -7932,7 +7990,6 @@ Bayes_2tfun<-function(){
 
 # Bayes_binom_fun
 Bayes_binom_fun<-function(){
-  
   #Data Model: environment called "e"
   e <- new.env()
   e$x <- tclVar("0"); 
@@ -8860,4 +8917,147 @@ two_sample_t_test_model_code<-function(x, y) {
   # Inspecting the Posterior
   plot(samples)
   summary(samples)  
-  }
+}
+
+# Spatially Defined Connections Function
+#  spatially_defined_fun<-function(){
+#   spdfs.fun<-function()c(unlist(lapply(c(ls(envir = .GlobalEnv),ls("package:zooaRchGUI")), function(SpatialPolygonsDataFrame) if(class(get(SpatialPolygonsDataFrame))[1] == "SpatialPolygonsDataFrame")c(unlist(SpatialPolygonsDataFrame)))), "Load User File", "Load Shape File")
+#   
+#   #Data Model: enviroment called e
+#   e<-new.env()
+#   e$dataname<-tclVar("Choose Data")
+#   e$dataframe<-tclVar("NULL")
+#   e$choice<-tclVar("Rook")
+#   e$voronicheck<-tclVar("FALSE")
+#   
+#   #Ok Function
+#   Okfun<-function() {
+#     switch(tclvalue(e$choice),
+#            Queen = {fundata.queen <- spdep::poly2nb(e$dataframe, queen = TRUE)
+#            plot(e$dataframe,col="light gray")
+#            title(main="Queen Connectivity")
+#            plot(fundata.queen,sp::coordinates(e$dataframe),add=TRUE,col="red",lwd=2)
+#            coords<-sp::coordinates(e$dataframe)
+#            if(tclvalue(e$voronicheck) == 1){
+#              voroni_fun(fundata.queen, coords)
+#            }},
+#            Rook = {fundata.rook <- spdep::poly2nb(e$dataframe, queen = FALSE)
+#            plot(e$dataframe,col="light gray")
+#            title(main="Rook Connectivity")
+#            plot(fundata.rook,sp::coordinates(e$dataframe),add=TRUE,col="blue",lwd=2)
+#            coords<-sp::coordinates(e$dataframe)
+#            if(tclvalue(e$voronicheck) == 1){
+#              voroni_fun(fundata.rook, coords)
+#            }},
+#            Delauney = {coords<-sp::coordinates(e$dataframe)
+#            ID<-row.names(assign(e$dataframe, "data.frame"))
+#            del.nb<-tri2nb(coords, row.names=ID)
+#            plot(e$dataframe, border="grey60")
+#            plot(del.nb, coords, add=TRUE, pch=".", col="red")
+#            text(bbox(e$dataframe)[1,2], bbox(e$dataframe)[2,1], labels="Delauney", cex = 1.5, pos = 2)
+#            if(tclvalue(e$voronicheck) == 1){
+#              voroni_fun(del.nb, coords)
+#            }},
+#            Gabriel = {coords<-coordinates(e$dataframe)
+#            ID<-row.names(assign(e$dataframe, "data.frame"))
+#            gab.nb<-graph2nb(gabrielneigh(coords), row.names = ID)
+#            plot(e$dataframe, border = "grey60")
+#            plot(gab.nb, coords, add = TRUE, pch = ".", col= "red")
+#            text(bbox(e$dataframe)[1,2], bbox(e$dataframe)[2,1], labels = "Gabriel", cex = 1.5, pos = 2)
+#            if(tclvalue(e$voronicheck) == 1){
+#              voroni_fun(gab.nb, coords)
+#            }},
+#            Relative = {coords<-coordinates(e$dataframe)
+#            ID<-row.names(assign(e$dataframe, "data.frame"))
+#            rel.nb<-spdep::graph2nb(spdep::relativeneigh(coords), row.names = ID)
+#            plot(e$dataframe, border = "grey60")
+#            plot(rel.nb, coords, add = TRUE, pch = ".", col = "red")
+#            text(bbox(e$dataframe)[1,2], bbox(e$dataframe)[2,1], labels = "Relative", cex = 1.5, pos = 2)
+#            if(tclvalue(e$voronicheck) == 1){
+#              voroni_fun(rel.nb, coords)}}
+#     )
+#     tkdestroy(window)
+#   }
+#   #Voroni Function
+#   voroni_fun<-function(input.nb, coordsin){
+#     par(mfrow=c(1,3))
+#     plot(input.nb, coordsin)
+#     Mosaic.vm <- tripack::voronoi.mosaic(coordsin[,1],coordsin[,2])
+#     plot(Mosaic.vm)
+#     Polygons.vp <- tripack::voronoi.polygons(Mosaic.vm)
+#     plot(Polygons.vp)
+#   }
+#   #Begin GUI Setup
+#   window<-tktoplevel()
+#   tkwm.title(window, "neighbor_fun")
+#   frame<-ttkframe(window, padding = c(3,3,12,12))
+#   tkpack(frame, expand = TRUE, fill = "both")
+#   
+#   #Layout
+#   label_frame<-ttklabelframe(frame, text = "Neighboring Data Analysis", padding = 10)
+#   tkpack(label_frame, expand = TRUE, fill = "both", padx = 5, pady = 5)
+#   tkgrid.columnconfigure(label_frame, 0, weight = 1)
+#   tkgrid.columnconfigure(label_frame, 1, weight = 1)
+#   tkgrid.columnconfigure(label_frame, 2, weight = 1)
+#   tkgrid.columnconfigure(label_frame, 1, weight = 1)
+#   put_label<-function(parent, text, row, column, sticky, width) {
+#     label<-ttklabel(parent, text = text)
+#     tkgrid(label, row = row, column = column, sticky = sticky)
+#   }
+#   #First Data Combobox
+#   put_label(label_frame, "Input Data:",0,0,sticky="w")
+#   data_combo <- ttkcombobox(label_frame, state = "readonly", 
+#                             values = spdfs.fun(), 
+#                             textvariable = e$dataname)
+#   tkgrid(data_combo, row = 0, column = 1, sticky="w", padx = 2)
+#   tkfocus(data_combo)
+#   
+#   tkwait.variable (e$dataname)
+#   
+#   dataname <- tclvalue(e$dataname)
+#   if (dataname == "Load User File"){
+#     dataframe <- getcsvfile()
+#     assign("dataframe", dataframe, envir = e)
+#   }
+#   else if (dataname == "Load Shape File"){
+#     getshapefile <- function() {
+#       name <- tclvalue(tkgetOpenFile(
+#         filetypes = "{{ESRI Shapefiles} {.shp}}"))
+#       if (name == "") return(data.frame());
+#       data <- shapefile(name)
+#       e$dataframe<-data
+#     }
+#     dataframe <- getshapefile()
+#   }
+#   else{
+#     dataframe <- get(dataname, .GlobalEnv)
+#     assign("dataframe", dataframe, envir = e)
+#   }
+#   #Method Radiobuttons
+#   put_label(label_frame, "Analysis Type:", 3,0, sticky="w")
+#   rb_frame<-ttkframe(label_frame)
+#   sapply(c("Queen", "Rook", "Delauney", "Gabriel", "Relative"), function(i) {
+#     radio_button<-tk2radiobutton(rb_frame, variable = e$choice, text = i, value = i)
+#     tkpack(radio_button, side = "left")
+#   })
+#   tkgrid(rb_frame, row = 3, column = 1, sticky = "w")
+#   
+#   #Voroni Data Checkbox
+#   put_label ( label_frame , "Voroni data:" , 4 , 0,sticky = "w")
+#   plot_check1 <-ttkcheckbutton (label_frame , variable = e$voronicheck)
+#   tkgrid (plot_check1 , row = 4 , column = 1 , sticky = "w" ,padx = 2)
+#   
+#   #Draw Cancel Button
+#   button_frame<-ttkframe(frame)
+#   cancel_button<-ttkbutton(button_frame, text = "Cancel")
+#   
+#   #Draw Ok Button
+#   ok_button<-ttkbutton(button_frame, text = "Ok", command = Okfun)
+#   tkpack(button_frame, fill = "x", padx = 5, pady = 5)
+#   tkpack(ttklabel(button_frame, text = " "), expand = TRUE,fill = "y", side = "left")
+#   sapply(list(cancel_button, ok_button), tkpack, side = "left", padx = 6)
+#   tkconfigure(ok_button, command = Okfun)
+#   tkconfigure(cancel_button, command = function() tkdestroy(window))
+#   tkbind("TButton", "<Return>", function(W) tcl(W, "invoke"))
+#   tkfocus(window)
+# }
