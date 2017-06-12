@@ -1,4 +1,4 @@
-![](figs/zooarchLOGOsmall.png)
+![](figs/zooaRchLOGO.png)
 
 Zooarchaeology is concerned with the analysis and inference of faunal remains recovered from archaeological sites. The **zooaRchGUI package** provides a *Graphical User Interface (GUI)* to analytical tools for zooarchaeological data in the R package. Functions in this package allow users to:
 
