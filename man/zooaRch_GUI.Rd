@@ -11,7 +11,7 @@ zooaRchGUI
 }
 \examples{
 # Example 1: Binford data
- 
- data(LRBdata) 
+
+ data(LRBdata)
  head(LRBdata)
 }

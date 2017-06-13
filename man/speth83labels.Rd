@@ -8,7 +8,7 @@
 Bison survival labels from Speth 1983
 }
 \references{
-Speth, J. D. 1983  Bison Kills and Bone Counts: 
+Speth, J. D. 1983  Bison Kills and Bone Counts:
 Decision Making by Ancient Hunters. University of Chicago Press, London.
 }
 \author{

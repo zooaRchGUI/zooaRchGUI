@@ -3,10 +3,10 @@
 \docType{data}
 \name{winslow.fuse}
 \alias{winslow.fuse}
-\title{Fusion Survival data for cattle remains from the 
+\title{Fusion Survival data for cattle remains from the
 Winslow site, a colonial period farm near Boston, MA.}
 \description{
-Fusion Survival data for cattle remains from the 
+Fusion Survival data for cattle remains from the
 Winslow site, a colonial period farm near Boston, MA.
 }
 \references{
